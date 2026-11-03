@@ -41,8 +41,6 @@ Biến môi trường (đều có giá trị mặc định cho lúc học):
 
 ---
 
-# Hướng dẫn chuẩn bị cho giảng viên (làm trước buổi học ít nhất 1 ngày)
-
 ### 1. Đưa repo lên GitHub (public)
 ```bash
 cd studyroom-demo               # đã có sẵn git và commit đầu tiên trên nhánh main
@@ -82,58 +80,3 @@ Có thể bỏ tick "allow bypass" để chính chủ repo cũng không merge đ
 - Mở link Render 10 phút trước để đánh thức service (bản miễn phí "ngủ" khi không có truy cập).
 - Mở sẵn tab: repo (Actions), Codespace, Settings → Branches, dashboard Render, link app.
 - Chụp ảnh dự phòng cho từng bước nếu chưa có.
-
----
-
-# Kịch bản demo trên lớp (khớp slide 26–31)
-
-**Demo 1 — Codespaces (slide 26).** Mở codespace → terminal:
-```bash
-pytest -v                       # 21 passed
-flask --app app run
-```
-Tab **Ports** → cổng 5000 → mở trình duyệt. Chuột phải → *Port Visibility → Public* để sinh viên mở trên điện thoại.
-
-**Demo 2 — CI đỏ rồi xanh (slide 28).** Trong codespace:
-```bash
-git switch -c demo/allow-4-hours
-# sửa studyroom/services.py:  MAX_HOURS = 4
-git commit -am "Allow 4-hour bookings" && git push -u origin demo/allow-4-hours
-```
-Mở PR → chấm vàng → **đỏ**: log có
-`FAILED tests/test_booking.py::test_booking_3h30_is_rejected - assert 201 == 422`
-(và `test_booking_3h01_is_rejected`). Nút Merge bị khoá. Sửa lại `MAX_HOURS = 3`, commit, push → CI chạy lại → **xanh**.
-Đóng PR này (không merge — nó không thay đổi gì).
-
-**Demo 3 — Render (slide 29).** Chiếu trang Settings của service: Build / Start command, Environment (chỉ chiếu tên biến), Auto-Deploy *After CI Checks Pass*. Mở link app.
-
-**Demo 4 — cả vòng, bấm giờ (slide 31).** Mở PR `demo/new-title` → bấm giờ → tài khoản thứ hai **Approve** → **Merge** → tab Actions: CI chạy trên `main` → Render: *Deploying* → *Live* → tải lại trang, tiêu đề đổi thành "StudyRoom — NEU". Dừng giờ, ghi lead time lên bảng.
-
-**Sau buổi học:** đổi lại tiêu đề (`PAGE_TITLE = "StudyRoom"`) qua một PR, xoá các nhánh demo, Stop codespace.
-
-## Tuỳ chọn: deploy từ `ci.yml` (slide 30) — file `.github/ci.v2.yml`
-
-`.github/ci.v2.yml` là bản CI **có thêm job `deploy`**: job này chỉ chạy khi job `test` xanh (`needs: test`) và chỉ với push lên `main` (PR không bao giờ deploy). Chưa có secret thì job chỉ in cảnh báo và **không làm CI đỏ**.
-
-File để **ngoài** `.github/workflows/` nên hiện **chưa chạy**. Muốn dùng:
-1. Render → Settings → Build & Deploy: **Auto-Deploy = Off** (để không deploy hai lần), copy **Deploy Hook URL**.
-2. GitHub → Settings → Secrets and variables → Actions → **New repository secret**: tên `RENDER_DEPLOY_HOOK`, giá trị là URL vừa copy.
-3. Thay workflow đang chạy (qua một PR):
-   ```bash
-   git switch -c ci/deploy-job
-   cp .github/ci.v2.yml .github/workflows/ci.yml
-   git commit -am "CI: deploy to Render when tests pass" && git push -u origin ci/deploy-job
-   ```
-4. Merge PR → tab Actions hiện hai job `test` → `deploy`; Render bắt đầu deploy sau khi `deploy` gọi hook.
-
-Muốn quay về cách Auto-Deploy: chép lại `ci.yml` cũ (lấy từ lịch sử Git) và bật lại Auto-Deploy = *After CI Checks Pass*.
-
-## Sự cố hay gặp khi demo
-
-| Hiện tượng | Cách xử lý |
-|---|---|
-| Không thấy check `test` trong branch protection | CI phải chạy ít nhất một lần trước; đợi lần chạy xanh đầu tiên rồi tìm lại |
-| Render không deploy sau khi merge | Kiểm tra Auto-Deploy = *After CI Checks Pass* và CI trên `main` đã xanh; hoặc bấm *Manual Deploy* |
-| Trang Render mở rất chậm | Service đang "ngủ" — chờ khoảng 1 phút, lần sau mở trước giờ |
-| `ModuleNotFoundError` trên Render | Thư viện thiếu trong `requirements.txt` |
-| Runner GitHub chờ quá lâu | Chuyển sang ảnh chụp dự phòng, quay lại sau |
