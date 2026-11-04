@@ -7,7 +7,7 @@ from datetime import datetime, time, timedelta
 
 from . import repository
 
-MAX_HOURS = 3                      # a booking lasts at most 3 hours
+MAX_HOURS = 4                      # a booking lasts at most 3 hours
 OPENING_TIME = time(7, 0)          # the room opens at 07:00
 CLOSING_TIME = time(22, 0)         # and closes at 22:00
 CHECKIN_WINDOW = timedelta(minutes=15)
